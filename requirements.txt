@@ -18,6 +18,10 @@ tqdm>=4.65.0
 # Optional: LLM enrichment
 # requests>=2.31.0  # For Ollama API calls
 
+# Jupyter for notebooks (required for academic presentations)
+jupyterlab>=4.0.0
+ipykernel>=6.0.0
+
 # Development and testing
 # pytest>=7.4.0
 # jupyter>=1.0.0
