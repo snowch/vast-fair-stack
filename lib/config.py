@@ -6,11 +6,13 @@ from typing import Dict, List
 
 # Paths
 BASE_DIR = Path(__file__).parent
-INDEX_DIR = BASE_DIR / "indexes"
-CACHE_DIR = BASE_DIR / "cache"
-TEMP_DIR = BASE_DIR / "temp"
+GENERATED_DIR = BASE_DIR.parent / "generated"  # All generated files go here
+INDEX_DIR = GENERATED_DIR / "indexes"
+CACHE_DIR = GENERATED_DIR / "cache"
+TEMP_DIR = GENERATED_DIR / "temp"
 
 # Create directories
+GENERATED_DIR.mkdir(exist_ok=True)
 INDEX_DIR.mkdir(exist_ok=True)
 CACHE_DIR.mkdir(exist_ok=True)
 TEMP_DIR.mkdir(exist_ok=True)
