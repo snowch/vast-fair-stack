@@ -7,6 +7,12 @@ from typing import List, Dict, Any, Optional, Tuple
 import pickle
 import config
 
+# Import faiss at module level
+try:
+    import faiss
+except ImportError:
+    faiss = None
+
 
 class VectorIndex:
     """FAISS-based vector index for dataset search"""
@@ -18,6 +24,12 @@ class VectorIndex:
         Args:
             embedding_dim: Dimension of embeddings
         """
+        if faiss is None:
+            raise ImportError(
+                "faiss not installed. "
+                "Install with: pip install faiss-cpu"
+            )
+        
         self.embedding_dim = embedding_dim
         self.index = None
         self.metadata_store = []  # List of metadata dicts
@@ -26,14 +38,6 @@ class VectorIndex:
     
     def _init_index(self):
         """Initialize FAISS index"""
-        try:
-            import faiss
-        except ImportError:
-            raise ImportError(
-                "faiss not installed. "
-                "Install with: pip install faiss-cpu"
-            )
-        
         # Use IndexFlatIP for cosine similarity with normalized vectors
         self.index = faiss.IndexFlatIP(self.embedding_dim)
         print(f"Initialized FAISS index (dim={self.embedding_dim})")
@@ -202,7 +206,6 @@ class VectorIndex:
         filepath_map_path = filepath_map_path or config.FILEPATH_MAP_FILE
         
         # Save FAISS index
-        import faiss
         faiss.write_index(self.index, str(index_path))
         
         # Save metadata
@@ -228,7 +231,6 @@ class VectorIndex:
             raise FileNotFoundError(f"Index not found: {index_path}")
         
         # Load FAISS index
-        import faiss
         faiss_index = faiss.read_index(str(index_path))
         
         # Create instance

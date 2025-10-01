@@ -143,7 +143,10 @@ class CachedEmbeddingGenerator(EmbeddingGenerator):
             
             # Merge results
             result = np.zeros((len(texts), self.get_embedding_dim()))
-            result[cache_indices] = np.array(embeddings)
+            
+            # FIX: Only assign cached embeddings if there are any
+            if cache_indices:
+                result[cache_indices] = np.array(embeddings)
             
             non_cache_indices = [i for i in range(len(texts)) if i not in cache_indices]
             result[non_cache_indices] = new_embeddings
@@ -154,6 +157,7 @@ class CachedEmbeddingGenerator(EmbeddingGenerator):
             
             return result
         else:
+            # All texts were cached
             return np.array(embeddings)
     
     def clear_cache(self):
