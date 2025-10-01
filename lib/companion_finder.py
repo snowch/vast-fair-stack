@@ -1,5 +1,6 @@
 """
 Discover companion documentation files (READMEs, scripts, citations)
+- Fixed to avoid picking up system files and notebooks
 """
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -15,9 +16,16 @@ class CompanionDocFinder:
         self.doc_patterns = config.DOCUMENTATION_PATTERNS
     
     def find_companions(self, data_filepath: Path, 
-                       search_parent: bool = True,
+                       search_parent: bool = False,
                        search_siblings: bool = True) -> Dict[str, List[Path]]:
-        """Find all companion documents for a data file"""
+        """
+        Find all companion documents for a data file
+        
+        Args:
+            data_filepath: Path to the data file
+            search_parent: Search parent directory (disabled by default to avoid system files)
+            search_siblings: Search for related data files
+        """
         companions = {
             'readmes': [],
             'citations': [],
@@ -27,28 +35,55 @@ class CompanionDocFinder:
         }
         
         data_filepath = Path(data_filepath)
-        search_dirs = [data_filepath.parent]
+        data_dir = data_filepath.parent
+        search_dirs = [data_dir]
         
-        # Also search parent directory
+        # Only search parent if it looks like a data directory
+        # (not a project root with Python code)
         if search_parent and data_filepath.parent.parent:
-            search_dirs.append(data_filepath.parent.parent)
+            parent_dir = data_filepath.parent.parent
+            # Don't search parent if it contains typical project files
+            project_markers = ['setup.py', 'setup.sh', 'requirements.txt', '.git', 'lib', 'src']
+            has_project_markers = any((parent_dir / marker).exists() for marker in project_markers)
+            
+            if not has_project_markers:
+                search_dirs.append(parent_dir)
         
         for search_dir in search_dirs:
-            # Find READMEs
+            # Find READMEs (only in data directory)
             for pattern in self.readme_patterns:
-                companions['readmes'].extend(search_dir.glob(pattern))
+                found_files = search_dir.glob(pattern)
+                companions['readmes'].extend(
+                    f for f in found_files 
+                    if self._is_likely_companion(f, data_dir)
+                )
             
             # Find citations
             for pattern in self.citation_patterns:
-                companions['citations'].extend(search_dir.glob(pattern))
+                found_files = search_dir.glob(pattern)
+                companions['citations'].extend(
+                    f for f in found_files
+                    if self._is_likely_companion(f, data_dir)
+                )
             
             # Find documentation
             for pattern in self.doc_patterns:
-                companions['documentation'].extend(search_dir.glob(pattern))
+                found_files = search_dir.glob(pattern)
+                companions['documentation'].extend(
+                    f for f in found_files
+                    if self._is_likely_companion(f, data_dir)
+                )
             
-            # Find scripts
+            # Find scripts (exclude system notebooks and setup scripts)
             for ext in config.SCRIPT_EXTENSIONS:
-                companions['scripts'].extend(search_dir.glob(f"*{ext}"))
+                found_files = search_dir.glob(f"*{ext}")
+                # Filter out notebooks with numbered prefixes (00_, 01_, etc.)
+                # and setup/system scripts
+                companions['scripts'].extend(
+                    f for f in found_files
+                    if self._is_likely_companion(f, data_dir) and 
+                    not self._is_system_file(f)
+                )
         
         # Find related data files (same prefix)
         if search_siblings:
@@ -62,6 +97,42 @@ class CompanionDocFinder:
             ]
         
         return companions
+    
+    def _is_likely_companion(self, filepath: Path, data_dir: Path) -> bool:
+        """Check if file is likely a companion to data (not system file)"""
+        # Must be in same directory as data or immediate subdirectory
+        try:
+            filepath.relative_to(data_dir)
+            return True
+        except ValueError:
+            # Not in data directory tree
+            return False
+    
+    def _is_system_file(self, filepath: Path) -> bool:
+        """Check if file is a system/project file (not a data companion)"""
+        name = filepath.name.lower()
+        
+        # Exclude numbered notebooks (00_, 01_, 99_, etc.)
+        if name.endswith('.ipynb'):
+            import re
+            if re.match(r'^\d{2}_', name):
+                return True
+        
+        # Exclude common setup/system scripts
+        system_scripts = {
+            'setup.sh', 'setup.py', 'install.sh', 'run.sh',
+            'run_jupyterlab.sh', 'test.py', 'tests.py',
+            '__init__.py', 'conftest.py'
+        }
+        if name in system_scripts:
+            return True
+        
+        # Exclude if in certain directories
+        excluded_dirs = {'lib', 'src', 'tests', 'docs', '.git', '__pycache__'}
+        if any(excluded in filepath.parts for excluded in excluded_dirs):
+            return True
+        
+        return False
     
     def _find_related_files(self, filepath: Path) -> List[Path]:
         """Find files with same prefix (likely related)"""
@@ -93,18 +164,22 @@ class CompanionDocFinder:
         
         directory = Path(directory)
         
-        # Search directory and subdirectories
+        # Search directory (NOT recursively to avoid picking up subdirectories)
         for pattern in self.readme_patterns:
-            companions['readmes'].extend(directory.rglob(pattern))
+            companions['readmes'].extend(directory.glob(pattern))
         
         for pattern in self.citation_patterns:
-            companions['citations'].extend(directory.rglob(pattern))
+            companions['citations'].extend(directory.glob(pattern))
         
         for pattern in self.doc_patterns:
-            companions['documentation'].extend(directory.rglob(pattern))
+            companions['documentation'].extend(directory.glob(pattern))
         
         for ext in config.SCRIPT_EXTENSIONS:
-            companions['scripts'].extend(directory.rglob(f"*{ext}"))
+            found_files = directory.glob(f"*{ext}")
+            companions['scripts'].extend(
+                f for f in found_files
+                if not self._is_system_file(f)
+            )
         
         # Remove duplicates
         for key in companions:
