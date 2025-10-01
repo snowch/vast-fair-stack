@@ -35,6 +35,8 @@ echo "Press Ctrl+C to stop the server"
 echo "=================================================="
 echo ""
 
+export PYTHONPATH="${PWD}/lib:${PYTHONPATH:-}"
+
 # Run JupyterLab
 jupyter lab \
     --ip=0.0.0.0 \
