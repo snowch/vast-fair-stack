@@ -1,0 +1,25 @@
+# FAIR Scientific Data Discovery System - Dependencies
+
+# Core scientific data formats
+netCDF4>=1.6.0
+h5py>=3.8.0
+# pygrib>=2.1.4  # Uncomment if you need GRIB support (requires system dependencies)
+
+# Machine learning and search
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4
+torch>=2.0.0
+transformers>=4.30.0
+
+# Core utilities
+numpy>=1.24.0
+tqdm>=4.65.0
+
+# Optional: LLM enrichment
+# requests>=2.31.0  # For Ollama API calls
+
+# Development and testing
+# pytest>=7.4.0
+# jupyter>=1.0.0
+# matplotlib>=3.7.0
+# pandas>=2.0.0
