@@ -1,5 +1,6 @@
 """
 Optional LLM-based metadata enrichment using local Ollama
+FIXED: Better prompts for search result summaries
 """
 from typing import Dict, Any, Optional, List
 import json
@@ -136,28 +137,91 @@ Keep responses concise and factual."""
             return {'raw_response': response}
     
     def enrich_search_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Enrich search results with summaries"""
+        """Enrich search results with summaries - IMPROVED VERSION"""
         enriched_results = []
         
         for result in results:
-            # Create short summary
-            prompt = f"""Summarize this scientific dataset in 1-2 sentences:
+            # Create detailed, clear summary prompt
+            title = result.get('title', 'N/A')
+            institution = result.get('institution', 'N/A')
+            
+            # Get variable information
+            variables = result.get('variables', {})
+            if isinstance(variables, dict):
+                var_list = list(variables.keys())[:5]
+                var_info = ', '.join(var_list)
+            else:
+                var_info = 'N/A'
+            
+            # Get dimensions if available
+            dimensions = result.get('dimensions', {})
+            dim_info = f"{len(dimensions)} dimensions" if dimensions else "unknown dimensions"
+            
+            # Improved prompt - much clearer about what we're asking
+            prompt = f"""Based on this scientific dataset metadata, write a concise 1-2 sentence description of what this dataset contains and what it could be used for:
 
-Title: {result.get('title', 'N/A')}
-Variables: {', '.join(list(result.get('variables', {}).keys())[:5])}
-Institution: {result.get('institution', 'N/A')}
+Dataset Title: {title}
+Institution: {institution}
+Variables: {var_info}
+Dimensions: {dim_info}
 
-One sentence summary:"""
+Write a brief, informative description (1-2 sentences only):"""
             
             try:
                 summary = self._call_llm(prompt, temperature=0.3)
-                result['llm_summary'] = summary.strip()
-            except:
-                pass
+                # Clean up the response
+                summary = summary.strip()
+                # Remove any meta-commentary
+                if "based on" in summary.lower() or "this dataset" in summary.lower():
+                    # Extract just the core description
+                    sentences = summary.split('.')
+                    summary = '. '.join([s.strip() for s in sentences if s.strip() and 
+                                       not s.strip().lower().startswith('based on')])[:200]
+                result['llm_summary'] = summary
+            except Exception as e:
+                # Fallback to simple description
+                result['llm_summary'] = f"Dataset containing {var_info} from {institution}"
             
             enriched_results.append(result)
         
         return enriched_results
+    
+    def create_dataset_summary(self, metadata: Dict[str, Any]) -> str:
+        """Create a standalone summary for a dataset - NEW METHOD"""
+        filename = metadata.get('filename', 'unknown')
+        title = metadata.get('title', filename)
+        institution = metadata.get('institution', 'Unknown institution')
+        
+        # Get variables
+        variables = metadata.get('variables', {})
+        if isinstance(variables, dict) and variables:
+            var_names = list(variables.keys())[:10]
+            var_text = ', '.join(var_names)
+        else:
+            var_text = 'No variables specified'
+        
+        # Get dimensions
+        dimensions = metadata.get('dimensions', {})
+        if dimensions:
+            dim_text = ', '.join(f"{k}={v}" for k, v in list(dimensions.items())[:5])
+        else:
+            dim_text = 'No dimensions specified'
+        
+        prompt = f"""Write a clear, informative 2-3 sentence description of this scientific dataset:
+
+Title: {title}
+Source: {institution}
+Measured Variables: {var_text}
+Data Structure: {dim_text}
+
+Describe what the dataset contains, what it measures, and what it could be used for. Be specific and concise:"""
+        
+        try:
+            summary = self._call_llm(prompt, temperature=0.3)
+            return summary.strip()
+        except Exception as e:
+            # Fallback
+            return f"{title} from {institution}. Contains measurements of {var_text}."
 
 
 class DataInspector:
