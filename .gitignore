@@ -30,3 +30,7 @@ downloads/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test artifacts and generated files
+generated/
+*.zip
