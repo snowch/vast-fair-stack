@@ -16,6 +16,7 @@ temp/
 sample_data/
 sample_dataset_collection/
 downloads/
+batch_test_data/
 
 # Jupyter
 .ipynb_checkpoints/
