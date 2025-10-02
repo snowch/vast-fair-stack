@@ -14,6 +14,13 @@ A **complete, local, free** system for making scientific datasets (NetCDF, HDF5,
 
 ## 🚀 Quick Start
 
+### (my) VM Specifications
+
+* **OS:** Ubuntu 23.04
+* **CPU:** 8 vCPUs
+* **RAM:** 8 GB
+* **Disk Space:** 100 GB
+
 ### Installation
 
 ```bash
