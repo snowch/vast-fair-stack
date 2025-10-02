@@ -98,7 +98,10 @@ def create_mystery_climate_dataset() -> Path:
         # Precipitation pattern: more near equator, seasonal
         lat_factor = 1 - np.abs(np.linspace(-1, 1, 90))**2
         seasonal = 1 + 0.5 * np.sin(np.linspace(0, 2*np.pi, 365))
-        pr_data = 0.0001 * seasonal[:, None, None] * lat_factor[None, :, None]
+        # Create base pattern (time x lat) then broadcast to 3D
+        base_pattern = 0.0001 * seasonal[:, None] * lat_factor[None, :]
+        pr_data = np.broadcast_to(base_pattern[:, :, None], (365, 90, 180)).copy()
+        # Add random noise
         pr_data += np.abs(np.random.randn(365, 90, 180) * 0.00005)
         pr[:] = pr_data
         
