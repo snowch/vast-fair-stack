@@ -46,8 +46,15 @@ class DiscoveryAgent:
                 "success": True,
                 "data_file": data_filepath,
                 "relevant_companions": [],
-                "total_examined": 0,
+                "uncertain_companions": [],
+                "not_relevant": [],
+                # Compatibility fields expected by notebooks / callers
+                "discovered": {
+                    "total_examined": 0
+                },
+                "confidence": 0.0,
                 "reasoning": "No companion documents found in directory",
+                "thoughts": [],
                 "processing_time": time.time() - start_time
             }
         
@@ -121,13 +128,32 @@ class DiscoveryAgent:
         print(f"Uncertain: {len(uncertain)}")
         print(f"Not relevant: {len(not_relevant)}")
         
+        # Compute an overall confidence score (average of relevant confidences
+        # weighted by presence). If no confidences available, default to 0.5
+        confidences = [r.get('confidence', 0.5) for r in relevant if isinstance(r, dict)]
+        if confidences:
+            overall_confidence = sum(confidences) / len(confidences)
+        else:
+            # If there are uncertain items, lower confidence slightly
+            overall_confidence = 0.5 if uncertain else 0.2
+
+        reasoning = f"Found {len(relevant)} relevant, {len(uncertain)} uncertain, {len(not_relevant)} not relevant."
+
         return {
             "success": True,
             "data_file": data_filepath,
             "relevant_companions": relevant,
             "uncertain_companions": uncertain,
             "not_relevant": not_relevant,
-            "total_examined": len(candidates),
+            # Compatibility fields expected by notebooks / callers
+            "discovered": {
+                "total_examined": len(candidates)
+            },
+            "confidence": float(overall_confidence),
+            "reasoning": reasoning,
+            # Simple thought trace (keeps API stable). Detailed traces can be
+            # produced if instrumented earlier in the workflow.
+            "thoughts": [],
             "processing_time": time.time() - start_time
         }
     
@@ -267,9 +293,3 @@ Decision:"""
                 "confidence": 0.3,
                 "reasoning": f"LLM error: {str(e)}"
             }
-
-
-# Wrapper for compatibility with existing code
-class DiscoveryAgent(SimpleDiscoveryAgent):
-    """Alias for compatibility"""
-    pass
