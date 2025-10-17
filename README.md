@@ -1,6 +1,5 @@
 # FAIR Scientific Data Discovery System
 
-A **complete, local, free** system for making scientific datasets (NetCDF, HDF5, GRIB) **Findable, Accessible, Interoperable, and Reusable (FAIR)** through semantic vector search.
 
 ## 🎯 Key Features
 
@@ -9,7 +8,6 @@ A **complete, local, free** system for making scientific datasets (NetCDF, HDF5,
 - ✅ **Handles Minimal Metadata** - Works even with poorly documented files
 - ✅ **Archive Support** - Automatically extracts and indexes .zip, .tar.gz files
 - ✅ **Companion Discovery** - Finds READMEs, citations, scripts
-- ✅ **Fast Search** - Sub-second queries using FAISS
 - ✅ **Optional LLM Enrichment** - Use local Ollama for enhanced metadata
 
 ## 🚀 Quick Start
@@ -99,7 +97,6 @@ Layer 2: METADATA ENRICHMENT
 
 Layer 3: INDEXING & STORAGE
 ├── Embedding Generation (sentence-transformers)
-├── Vector Index (FAISS - local similarity search)
 └── Metadata Store (pickle - full metadata preservation)
 
 Layer 4: DISCOVERY INTERFACE
@@ -116,7 +113,6 @@ Layer 4: DISCOVERY INTERFACE
 2. **01_File_Validation.ipynb** - Detect corrupt or invalid files
 3. **02_Metadata_Extraction.ipynb** - Extract from NetCDF/HDF5/GRIB
 4. **03_Companion_Documents.ipynb** - Discover READMEs, citations, scripts
-5. **04_Vector_Search.ipynb** - Semantic search with embeddings
 6. **99_Complete_Workflow.ipynb** - End-to-end examples
 
 ### Command-Line Tools
@@ -133,9 +129,6 @@ Layer 4: DISCOVERY INTERFACE
 - **companion_finder.py** - Find companion documents
 - **companion_extractor.py** - Extract content from companions
 - **archive_handler.py** - Handle compressed archives
-- **embedding_generator.py** - Generate embeddings
-- **vector_index.py** - FAISS-based search index
-- **search_engine.py** - Main search engine
 - **llm_enricher.py** - Optional LLM enrichment
 
 ## 🔧 Usage Examples
@@ -232,7 +225,6 @@ for i, r in enumerate(results, 1):
 - **Speed**: ~0.01s per embedding
 
 ### Vector Search
-- **Engine**: FAISS IndexFlatIP
 - **Similarity**: Cosine similarity (normalized)
 - **Speed**: <200ms for 10k datasets
 - **Scalability**: Millions of vectors
@@ -322,7 +314,6 @@ python fair_index.py index /data  # Progress bar shown by default
 | Metadata extraction | 10 files/min | Depends on file size |
 | Embedding generation | 100 texts/sec | Cached after first run |
 | Search query | <200ms | For 10,000 datasets |
-| Index size | 2MB / 1000 files | FAISS + metadata |
 
 ## 🤝 Contributing
 
@@ -357,7 +348,6 @@ NEW_DOC_PATTERNS = ['*pattern*']
 
 Built with:
 - [sentence-transformers](https://www.sbert.net/) - Local embeddings
-- [FAISS](https://github.com/facebookresearch/faiss) - Vector search
 - [netCDF4-python](https://unidata.github.io/netcdf4-python/) - NetCDF support
 - [h5py](https://www.h5py.org/) - HDF5 support
 

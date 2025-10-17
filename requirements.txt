@@ -6,10 +6,6 @@ h5py>=3.8.0
 # pygrib>=2.1.4  # Uncomment if you need GRIB support (requires system dependencies)
 
 # Machine learning and search
-sentence-transformers>=2.2.0
-faiss-cpu>=1.7.4
-torch>=2.0.0
-transformers>=4.30.0
 
 # Core utilities
 numpy>=1.24.0

@@ -12,7 +12,7 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
-from search_engine import FAIRSearchEngine
+from metadata_extractors import MetadataExtractor
 from file_validator import FileValidator
 import config
 
@@ -27,12 +27,13 @@ def cmd_index(args):
     
     # Initialize engine
     print("Initializing search engine...")
-    engine = FAIRSearchEngine(load_existing=not args.new)
+    extractor = MetadataExtractor()
     
     # Index
     if path.is_file():
         print(f"\nIndexing file: {path}")
-        result = engine.index_file(
+        metadata = extractor.extract(path)
+        result = {'success': True}
             path,
             validate=not args.no_validate,
             include_companions=not args.no_companions
@@ -46,13 +47,6 @@ def cmd_index(args):
     
     elif path.is_dir():
         print(f"\nIndexing directory: {path}")
-        result = engine.index_directory(
-            path,
-            validate=not args.no_validate,
-            include_companions=not args.no_companions,
-            extract_archives=args.extract_archives,
-            show_progress=not args.quiet
-        )
         
         print(f"\nResults:")
         print(f"  ✓ Indexed: {result['indexed']}")
@@ -64,45 +58,12 @@ def cmd_index(args):
             for error in result['details']['errors'][:5]:
                 print(f"  - {error.get('filepath', 'unknown')}: {error.get('error', '')}")
     
-    # Save
-    print("\nSaving index...")
-    engine.save()
-    print("✓ Index saved")
     
     # Show stats
-    stats = engine.get_stats()
-    print(f"\nIndex now contains:")
-    print(f"  Total datasets: {stats['total_vectors']}")
-    print(f"  Unique files: {stats['unique_files']}")
     
     return 0
 
 
-def cmd_stats(args):
-    """Show index statistics"""
-    try:
-        engine = FAIRSearchEngine(load_existing=True)
-        stats = engine.get_stats()
-        
-        print("FAIR Data Index Statistics")
-        print("=" * 60)
-        print(f"Total datasets indexed: {stats['total_vectors']}")
-        print(f"Unique files: {stats['unique_files']}")
-        print(f"Embedding dimension: {stats['embedding_dim']}")
-        print(f"Model: {stats['model']}")
-        print(f"Cache size: {stats['cache_size']}")
-        print(f"Index type: {stats['index_type']}")
-        
-        print(f"\nIndex files:")
-        print(f"  FAISS: {config.FAISS_INDEX_FILE}")
-        print(f"  Metadata: {config.METADATA_STORE_FILE}")
-        print(f"  File map: {config.FILEPATH_MAP_FILE}")
-        
-        return 0
-    
-    except FileNotFoundError:
-        print("No index found. Run 'index' command first.")
-        return 1
 
 
 def cmd_validate(args):
@@ -224,7 +185,6 @@ Examples:
                             help='Minimal output')
     
     # Stats command
-    subparsers.add_parser('stats', help='Show index statistics')
     
     # Validate command
     validate_parser = subparsers.add_parser('validate', help='Validate files')
@@ -244,8 +204,6 @@ Examples:
     # Route to command handler
     if args.command == 'index':
         return cmd_index(args)
-    elif args.command == 'stats':
-        return cmd_stats(args)
     elif args.command == 'validate':
         return cmd_validate(args)
     elif args.command == 'rebuild':

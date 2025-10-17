@@ -18,17 +18,11 @@ CACHE_DIR.mkdir(exist_ok=True)
 TEMP_DIR.mkdir(exist_ok=True)
 
 # Index files
-FAISS_INDEX_FILE = INDEX_DIR / "faiss_index.bin"
-METADATA_STORE_FILE = INDEX_DIR / "metadata_store.pkl"
-FILEPATH_MAP_FILE = INDEX_DIR / "filepath_map.pkl"
 
 # Embedding model
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-EMBEDDING_DIM = 384
 
 # Search settings
 DEFAULT_TOP_K = 10
-SIMILARITY_THRESHOLD = 0.3
 
 # File type magic bytes
 MAGIC_BYTES: Dict[str, List[bytes]] = {
