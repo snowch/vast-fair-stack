@@ -27,7 +27,7 @@ def create_mystery_climate_dataset() -> Path:
         Path to the created NetCDF file
     """
     # Create sample_data directory
-    output_dir = Path("sample_data")
+    output_dir = Path("generated/sample_data")
     output_dir.mkdir(exist_ok=True)
     
     filepath = output_dir / "mystery_climate_data.nc"
