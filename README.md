@@ -21,13 +21,19 @@
 ### Installation
 
 ```bash
+git clone https://github.com/snowch/vast-fair-stack
+
 # Clone or download the repository
-cd fair-data-discovery
+cd vast-fair-stack
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Run Jupyterlab
+./run_jupyterlab.sh
 ```
 
+You can now run the notebooks in order.
 
 ## 📝 License
 
